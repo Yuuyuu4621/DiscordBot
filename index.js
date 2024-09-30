@@ -1,17 +1,14 @@
-require('dotenv').config();  // .envファイルを読み込む
+require('dotenv').config();
 const { Client, GatewayIntentBits, REST, Routes, PermissionsBitField, EmbedBuilder } = require('discord.js');
-const fetch = require('node-fetch'); // WebhookにPOSTするためのモジュール
+const fetch = require('node-fetch');
 
-// 環境変数から値を取得
 const token = process.env.DISCORD_TOKEN;
 const clientId = process.env.CLIENT_ID;
 const guildId = process.env.GUILD_ID;
-const webhookUrl = process.env.WEBHOOK_URL; // Webhook URLを取得
+const webhookUrl = process.env.WEBHOOK_URL;
 
-// Discordクライアントの作成
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-// スラッシュコマンドを登録する
 const commands = [
     {
         name: 'ping',
@@ -32,13 +29,13 @@ const commands = [
             {
                 name: 'user',
                 description: '対象ユーザー',
-                type: 6, // USER type
+                type: 6,
                 required: true,
             },
             {
                 name: 'reason',
                 description: '理由',
-                type: 3, // STRING type
+                type: 3,
                 required: false,
             },
         ],
@@ -50,18 +47,18 @@ const commands = [
             {
                 name: 'add',
                 description: 'ユーザーにロールを追加します',
-                type: 1, // SUB_COMMAND
+                type: 1,
                 options: [
                     {
                         name: 'user',
                         description: '対象ユーザー',
-                        type: 6, // USER type
+                        type: 6,
                         required: true,
                     },
                     {
                         name: 'role',
                         description: '追加するロール',
-                        type: 8, // ROLE type
+                        type: 8,
                         required: true,
                     },
                 ],
@@ -69,18 +66,18 @@ const commands = [
             {
                 name: 'remove',
                 description: 'ユーザーからロールを削除します',
-                type: 1, // SUB_COMMAND
+                type: 1,
                 options: [
                     {
                         name: 'user',
                         description: '対象ユーザー',
-                        type: 6, // USER type
+                        type: 6,
                         required: true,
                     },
                     {
                         name: 'role',
                         description: '削除するロール',
-                        type: 8, // ROLE type
+                        type: 8,
                         required: true,
                     },
                 ],
@@ -89,7 +86,6 @@ const commands = [
     },
 ];
 
-// REST APIを使ってコマンドをDiscordに登録
 const rest = new REST({ version: '10' }).setToken(token);
 
 (async () => {
@@ -104,20 +100,18 @@ const rest = new REST({ version: '10' }).setToken(token);
         console.log('アプリケーションコマンドの再読み込みに成功しました');
     } catch (error) {
         console.error('コマンドの再読み込み中にエラーが発生しました:', error);
-        await sendErrorToWebhook(error); // エラーをWebhookに送信
+        await sendErrorToWebhook(error);
     }
 })();
 
-// ボットが起動したときの処理
 client.once('ready', () => {
     console.log(`${client.user.tag} がログインしました`);
 });
 
-// エラーメッセージをWebhookに送信する関数
 const sendErrorToWebhook = async (error) => {
     const embed = new EmbedBuilder()
         .setTitle('エラーが発生しました')
-        .setColor(0xFF0000) // REDの16進数値を指定
+        .setColor(0xFF0000)
         .setDescription(`\`\`\`${error.message}\`\`\``)
         .setTimestamp();
 
@@ -132,14 +126,12 @@ const sendErrorToWebhook = async (error) => {
     }
 };
 
-// コマンドの実行処理
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
     const { commandName } = interaction;
 
     try {
-        // コマンド送信時の処理
         if (commandName === 'ping') {
             await interaction.reply('Pong'); }
 
@@ -150,11 +142,9 @@ client.on('interactionCreate', async interaction => {
             await interaction.reply('ステータス : 正常に起動中'); }
 
           else if (commandName === 'kick') {
-            // 「メンバーをキック」の権限があるか確認
             if (!interaction.member.permissions.has(PermissionsBitField.Flags.KickMembers)) {
                 return interaction.reply({ content: 'メンバーをキックする権限がありません。', ephemeral: true });
             }
-            // キックする対象のユーザーと理由を取得
             const targetUser = interaction.options.getMember('user');
             const reason = interaction.options.getString('reason') || '指定なし';
             const executor = interaction.user.tag;
@@ -171,7 +161,6 @@ client.on('interactionCreate', async interaction => {
             const targetRole = interaction.options.getRole('role');
 
             if (subcommand === 'add') {
-                // ロール追加
                 if (targetUser.roles.cache.has(targetRole.id)) {
                     return interaction.reply({ content: 'このユーザーは既にそのロールを持っています。', ephemeral: true });
                 }
@@ -179,7 +168,6 @@ client.on('interactionCreate', async interaction => {
                 await interaction.reply(`${targetUser.user.tag} にロール ${targetRole.name} を追加しました。`); }
 
               else if (subcommand === 'remove') {
-                // ロール削除
                 if (!targetUser.roles.cache.has(targetRole.id)) {
                     return interaction.reply({ content: 'このユーザーはそのロールを持っていません。', ephemeral: true });
                 }
@@ -187,19 +175,17 @@ client.on('interactionCreate', async interaction => {
                 await interaction.reply(`${targetUser.user.tag} からロール ${targetRole.name} を削除しました。`); }
         }
     } catch (error) {
-        // Missing Permissionsエラーを特定
         if (error.code === 50013) {
             await interaction.reply({ content: '権限がありません。', ephemeral: true });
         } else {
             console.error('コマンド実行中にエラーが発生しました:', error);
-            await sendErrorToWebhook(error); // エラーをWebhookに送信
+            await sendErrorToWebhook(error);
             await interaction.reply({ content: 'コマンド実行中にエラーが発生しました。', ephemeral: true });
         }
     }
 });
 
-// ボットにログイン
 client.login(token).catch(error => {
     console.error('ボットのログイン中にエラーが発生しました:', error);
-    sendErrorToWebhook(error); // ログインエラーをWebhookに送信
+    sendErrorToWebhook(error);
 });
