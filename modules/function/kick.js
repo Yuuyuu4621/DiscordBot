@@ -1,22 +1,18 @@
-const { PermissionsBitField } = require('discord.js');
+const { PermissionsBitField, SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
-    name: 'kick',
-    description: 'サーバーから指定したユーザーをキックします',
-    options: [
-        {
-            name: 'user',
-            description: '対象ユーザー',
-            type: 6,
-            required: true,
-        },
-        {
-            name: 'reason',
-            description: '理由',
-            type: 3,
-            required: false,
-        },
-    ],
+    data: new SlashCommandBuilder()
+        .setName('kick')
+        .setDescription('サーバーから指定したユーザーをキックします')
+        .addUserOption(option =>
+            option.setName('user')
+                .setDescription('対象ユーザー')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('reason')
+                .setDescription('理由')
+                .setRequired(false)),
+    
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.KickMembers)) {
             return interaction.reply({ content: 'メンバーをキックする権限がありません。', ephemeral: true });

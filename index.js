@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, REST, Routes, EmbedBuilder } = require('discord.js');
-const fs = require('fs'); // fsモジュールをインポート
-const path = require('path'); // pathモジュールをインポート
+const fs = require('fs');
+const path = require('path');
 const fetch = require('node-fetch');
 
 const token = process.env.DISCORD_TOKEN;
@@ -13,19 +13,22 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 const commands = [];
 
-// commandsフォルダからコマンドを読み込む
+// コマンドファイルを読み込む
 const commandFiles = fs.readdirSync(path.join(__dirname, 'commands')).filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
     const command = require(`./commands/${file}`);
-    commands.push(command);
+    if (command.data && command.data.toJSON) {
+        commands.push(command);
+    } else {
+        console.error(`コマンド ${file} に問題があります: dataが正しく設定されていません。`);
+    }
 }
 
-// modules/functionフォルダからアクションコマンドを読み込む
-const actionFiles = fs.readdirSync(path.join(__dirname, 'modules/function')).filter(file => file.endsWith('.js'));
-for (const file of actionFiles) {
-    const actionCommand = require(`./modules/function/${file}`);
-    commands.push(actionCommand);
-}
+// modules/role.js と modules/function/kick.js を読み込む
+const roleCommand = require('./modules/function/role');
+const kickCommand = require('./modules/function/kick'); // kick.jsを追加
+commands.push(roleCommand); // commands に role コマンドを追加
+commands.push(kickCommand); // commands に kick コマンドを追加
 
 const rest = new REST({ version: '10' }).setToken(token);
 
@@ -35,7 +38,7 @@ const rest = new REST({ version: '10' }).setToken(token);
 
         await rest.put(
             Routes.applicationGuildCommands(clientId, guildId),
-            { body: commands }
+            { body: commands.map(command => command.data.toJSON()) } // コマンドのデータを設定
         );
 
         console.log('アプリケーションコマンドの再読み込みに成功しました');
@@ -67,12 +70,14 @@ const sendErrorToWebhook = async (error) => {
     }
 };
 
+// コマンドの実行
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
     const { commandName } = interaction;
 
-    const command = commands.find(cmd => cmd.name === commandName);
+    // コマンドを見つける
+    const command = commands.find(cmd => cmd.data.name === commandName);
     if (command) {
         try {
             await command.execute(interaction);

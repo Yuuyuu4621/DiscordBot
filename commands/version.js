@@ -1,6 +1,10 @@
+const { SlashCommandBuilder } = require('discord.js');
+
 module.exports = {
-    name: 'version',
-    description: 'バージョンを表示します',
+    data: new SlashCommandBuilder()
+        .setName('version')
+        .setDescription('バージョンを表示します'),
+    
     async execute(interaction) {
         await interaction.reply('バージョン : β0.1');
     },

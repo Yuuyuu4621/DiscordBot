@@ -1,47 +1,39 @@
+const { PermissionsBitField, SlashCommandBuilder } = require('discord.js');
+
 module.exports = {
-    name: 'role',
-    description: 'ユーザーにロールを追加または削除します',
-    options: [
-        {
-            name: 'add',
-            description: 'ユーザーにロールを追加します',
-            type: 1,
-            options: [
-                {
-                    name: 'user',
-                    description: '対象ユーザー',
-                    type: 6,
-                    required: true,
-                },
-                {
-                    name: 'role',
-                    description: '追加するロール',
-                    type: 8,
-                    required: true,
-                },
-            ],
-        },
-        {
-            name: 'remove',
-            description: 'ユーザーからロールを削除します',
-            type: 1,
-            options: [
-                {
-                    name: 'user',
-                    description: '対象ユーザー',
-                    type: 6,
-                    required: true,
-                },
-                {
-                    name: 'role',
-                    description: '削除するロール',
-                    type: 8,
-                    required: true,
-                },
-            ],
-        },
-    ],
+    data: new SlashCommandBuilder()
+        .setName('role')
+        .setDescription('ユーザーにロールを追加または削除します')
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('add')
+                .setDescription('ユーザーにロールを追加します')
+                .addUserOption(option =>
+                    option.setName('user')
+                        .setDescription('対象ユーザー')
+                        .setRequired(true))
+                .addRoleOption(option =>
+                    option.setName('role')
+                        .setDescription('追加するロール')
+                        .setRequired(true)))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('remove')
+                .setDescription('ユーザーからロールを削除します')
+                .addUserOption(option =>
+                    option.setName('user')
+                        .setDescription('対象ユーザー')
+                        .setRequired(true))
+                .addRoleOption(option =>
+                    option.setName('role')
+                        .setDescription('削除するロール')
+                        .setRequired(true))),
+    
     async execute(interaction) {
+        if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+            return interaction.reply({ content: 'メンバーのロールを変更する権限がありません。', ephemeral: true });
+        }
+
         const subcommand = interaction.options.getSubcommand();
         const targetUser = interaction.options.getMember('user');
         const targetRole = interaction.options.getRole('role');
