@@ -1,4 +1,6 @@
-const { PermissionsBitField, SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
+const roleAdd = require('./roleadd');
+const roleRemove = require('./roleremove');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -30,27 +32,11 @@ module.exports = {
                         .setRequired(true))),
     
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
-            return interaction.reply({ content: 'メンバーのロールを変更する権限がありません。', ephemeral: true });
-        }
-
         const subcommand = interaction.options.getSubcommand();
-        const targetUser = interaction.options.getMember('user');
-        const targetRole = interaction.options.getRole('role');
-
         if (subcommand === 'add') {
-            if (targetUser.roles.cache.has(targetRole.id)) {
-                return interaction.reply({ content: 'このユーザーは既にそのロールを持っています。', ephemeral: true });
-            }
-            await targetUser.roles.add(targetRole);
-            await interaction.reply(`${targetUser.user.tag} にロール ${targetRole.name} を追加しました。`);
-
+            return roleAdd.execute(interaction);
         } else if (subcommand === 'remove') {
-            if (!targetUser.roles.cache.has(targetRole.id)) {
-                return interaction.reply({ content: 'このユーザーはそのロールを持っていません。', ephemeral: true });
-            }
-            await targetUser.roles.remove(targetRole);
-            await interaction.reply(`${targetUser.user.tag} からロール ${targetRole.name} を削除しました。`);
+            return roleRemove.execute(interaction);
         }
     },
 };

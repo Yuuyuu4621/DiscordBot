@@ -24,11 +24,12 @@ for (const file of commandFiles) {
     }
 }
 
-// modules/role.js と modules/function/kick.js を読み込む
-const roleCommand = require('./modules/function/role');
-const kickCommand = require('./modules/function/kick'); // kick.jsを追加
-commands.push(roleCommand); // commands に role コマンドを追加
-commands.push(kickCommand); // commands に kick コマンドを追加
+const roleCommand = require('./modules/function/role/role');
+const kickCommand = require('./modules/function/kick');
+const admin_stopCommand = require('./admin/stop');
+commands.push(roleCommand);
+commands.push(kickCommand);
+commands.push(admin_stopCommand);
 
 const rest = new REST({ version: '10' }).setToken(token);
 
@@ -38,7 +39,7 @@ const rest = new REST({ version: '10' }).setToken(token);
 
         await rest.put(
             Routes.applicationGuildCommands(clientId, guildId),
-            { body: commands.map(command => command.data.toJSON()) } // コマンドのデータを設定
+            { body: commands.map(command => command.data.toJSON()) }
         );
 
         console.log('アプリケーションコマンドの再読み込みに成功しました');
