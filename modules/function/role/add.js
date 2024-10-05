@@ -2,7 +2,7 @@ const { PermissionsBitField } = require('discord.js');
 
 module.exports = {
     data: {
-        name: 'roleadd',
+        name: 'add',
         description: 'ユーザーにロールを追加します',
     },
     async execute(interaction) {

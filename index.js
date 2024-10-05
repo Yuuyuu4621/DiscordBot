@@ -24,12 +24,12 @@ for (const file of commandFiles) {
     }
 }
 
+const adminCommand = require('./admin/admin')
 const roleCommand = require('./modules/function/role/role');
 const kickCommand = require('./modules/function/kick');
-const admin_stopCommand = require('./admin/stop');
 commands.push(roleCommand);
 commands.push(kickCommand);
-commands.push(admin_stopCommand);
+commands.push(adminCommand)
 
 const rest = new REST({ version: '10' }).setToken(token);
 

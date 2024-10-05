@@ -1,9 +1,8 @@
-// modules/function/role/roleremove.js
 const { PermissionsBitField } = require('discord.js');
 
 module.exports = {
     data: {
-        name: 'roleremove',
+        name: 'remove',
         description: 'ユーザーからロールを削除します',
     },
     async execute(interaction) {

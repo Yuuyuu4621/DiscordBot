@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
-const roleAdd = require('./roleadd');
-const roleRemove = require('./roleremove');
+const roleadd = require('./add');
+const roleremove = require('./remove');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -34,9 +34,9 @@ module.exports = {
     async execute(interaction) {
         const subcommand = interaction.options.getSubcommand();
         if (subcommand === 'add') {
-            return roleAdd.execute(interaction);
+            return roleadd.execute(interaction);
         } else if (subcommand === 'remove') {
-            return roleRemove.execute(interaction);
+            return roleremove.execute(interaction);
         }
     },
 };
