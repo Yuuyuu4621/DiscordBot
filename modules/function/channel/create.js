@@ -6,16 +6,24 @@ module.exports = {
         description: 'チャンネルを作成します',
     },
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageChannels)) {            return interaction.reply({ content: 'メンバーのロールを変更する権限がありません。', ephemeral: true });
+        if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageChannels)) {
+            return interaction.reply({ content: 'チャンネルを作成する権限がありません。', ephemeral: true });
         }
 
-        const channelName = interaction.options.targetRole('name');
+        const channelName = interaction.options.getString('name');
+        const category = interaction.options.getChannel('category');
 
-        if (channelName.channel.cache.has(channelName.name)) {
-            return interaction.reply({ content: 'このチャンネル名は既に存在します', ephemeral: true });
+        const existingChannel = interaction.guild.channels.cache.find(channel => channel.name === channelName);
+        if (existingChannel) {
+            return interaction.reply({ content: 'そのチャンネル名は既に存在します。', ephemeral: true });
         }
 
-        await channel.create(channelName);
-        await interaction.reply(`${targetUser.user.tag} にロール ${targetRole.name} を追加しました。`);    
+        const createdChannel = await interaction.guild.channels.create({
+            name: channelName,
+            type: 0,
+            parent: category ? category.id : null,
+        });
+
+        return interaction.reply({ content: `チャンネル ${createdChannel.name} が作成されました。`, ephemeral: true });
     },
 };
