@@ -9,7 +9,7 @@ module.exports = {
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageChannels)) {            return interaction.reply({ content: 'メンバーのロールを変更する権限がありません。', ephemeral: true });
         }
 
-        const channelName = ('name');
+        const channelName = interaction.options.targetRole('name');
 
         if (channelName.channel.cache.has(channelName.name)) {
             return interaction.reply({ content: 'このチャンネル名は既に存在します', ephemeral: true });

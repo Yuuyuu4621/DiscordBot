@@ -27,11 +27,9 @@ for (const file of commandFiles) {
 const adminCommand = require('./admin/admin')
 const roleCommand = require('./modules/function/role/role');
 const kickCommand = require('./modules/function/kick');
-const channelCommand = require('./modules/function/channel/channel')
 commands.push(roleCommand);
 commands.push(kickCommand);
 commands.push(adminCommand)
-commands.push(channelCommand);
 
 const rest = new REST({ version: '10' }).setToken(token);
 
