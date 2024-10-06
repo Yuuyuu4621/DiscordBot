@@ -36,10 +36,21 @@ const rest = new REST({ version: '10' }).setToken(token);
         console.log('アプリケーションコマンドの再読み込みを開始しました');
 
         for (const guildId of guildIds) {
+            const existingCommands = await rest.get(Routes.applicationGuildCommands(clientId, guildId.trim()));
+
+            for (const command of existingCommands) {
+                const commandExists = commands.some(cmd => cmd.data.name === command.name);
+                if (!commandExists) {
+                    console.log(`コマンド ${command.name} を削除します`);
+                    await rest.delete(Routes.applicationCommand(clientId, guildId.trim(), command.id));
+                }
+            }
+
             await rest.put(
                 Routes.applicationGuildCommands(clientId, guildId.trim()),
                 { body: commands.map(command => command.data.toJSON()) }
             );
+
             console.log(`ギルド ${guildId.trim()} にコマンドが正常に登録されました`);
         }
 
