@@ -27,9 +27,11 @@ for (const file of commandFiles) {
 const adminCommand = require('./admin/admin')
 const roleCommand = require('./modules/function/role/role');
 const kickCommand = require('./modules/function/kick');
+const channelCommand = require('./modules/function/channel/channel')
 commands.push(roleCommand);
 commands.push(kickCommand);
 commands.push(adminCommand)
+commands.push(channelCommand);
 
 const rest = new REST({ version: '10' }).setToken(token);
 
@@ -71,17 +73,15 @@ const sendErrorToWebhook = async (error) => {
     }
 };
 
-// コマンドの実行
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
     const { commandName } = interaction;
 
-    // コマンドを見つける
     const command = commands.find(cmd => cmd.data.name === commandName);
     if (command) {
         try {
-            await command.execute(interaction);
+            await command.execute( interaction, client );
         } catch (error) {
             console.error('コマンド実行中にエラーが発生しました:', error);
             await sendErrorToWebhook(error);

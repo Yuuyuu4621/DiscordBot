@@ -6,8 +6,8 @@ module.exports = {
         description: 'botを停止します',
     },
     async execute(interaction) {
-        if (interaction.commandName === 'admin' && interaction.options.getSubcommand() === 'stop') {
-                await interaction.reply({ content: 'Botを停止します。', ephemeral: true });
+        if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+                await interaction.reply({ content: 'Botを停止します。'});
                 client.destroy();
                 console.log('Botが停止しました');
             }
