@@ -13,6 +13,7 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 const commands = [];
 
+// コマンドファイルを読み込む
 const commandFiles = fs.readdirSync(path.join(__dirname, 'commands')).filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
     const command = require(`./commands/${file}`);
@@ -35,17 +36,28 @@ const rest = new REST({ version: '10' }).setToken(token);
     try {
         console.log('アプリケーションコマンドの再読み込みを開始しました');
 
+        // 既存のコマンドを取得
         for (const guildId of guildIds) {
             const existingCommands = await rest.get(Routes.applicationGuildCommands(clientId, guildId.trim()));
 
+            // 既存のコマンドを削除する
             for (const command of existingCommands) {
                 const commandExists = commands.some(cmd => cmd.data.name === command.name);
                 if (!commandExists) {
                     console.log(`コマンド ${command.name} を削除します`);
-                    await rest.delete(Routes.applicationCommand(clientId, guildId.trim(), command.id));
+                    try {
+                        await rest.delete(Routes.applicationCommand(clientId, guildId.trim(), command.id));
+                    } catch (deleteError) {
+                        if (deleteError.code === 10063) {
+                            console.warn(`コマンド ${command.name} は既に削除されています: ${deleteError.message}`);
+                        } else {
+                            console.error(`コマンド ${command.name} の削除中にエラーが発生しました:`, deleteError);
+                        }
+                    }
                 }
             }
 
+            // 新しいコマンドを登録
             await rest.put(
                 Routes.applicationGuildCommands(clientId, guildId.trim()),
                 { body: commands.map(command => command.data.toJSON()) }
@@ -65,6 +77,7 @@ client.once('ready', () => {
     console.log(`${client.user.tag} がログインしました`);
 });
 
+// エラーをWebhookに送信する関数
 const sendErrorToWebhook = async (error) => {
     const embed = new EmbedBuilder()
         .setTitle('エラーが発生しました')
@@ -83,6 +96,7 @@ const sendErrorToWebhook = async (error) => {
     }
 };
 
+// コマンド実行ハンドラー
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
