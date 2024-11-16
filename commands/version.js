@@ -6,6 +6,6 @@ module.exports = {
         .setDescription('バージョンを表示します'),
     
     async execute(interaction) {
-        await interaction.reply('バージョン : β0.1');
+        await interaction.reply('バージョン : 0.1');
     },
 };
