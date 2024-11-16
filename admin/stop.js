@@ -7,9 +7,11 @@ module.exports = {
     },
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-                await interaction.reply({ content: 'Botを停止します。'});
-                client.destroy();
-                console.log('Botが停止しました');
-            }
-        },
-    };
+            return interaction.reply({ content: '権限がありません', ephemeral: true });
+        }
+
+        await interaction.reply('Botを停止します...');
+        console.log('Botが停止されます...');
+        process.exit(0);
+    },
+};
