@@ -37,17 +37,19 @@ for (const file of logFiles) {
     }
 }
 
+let logWebhook;
+
 client.on('messageDelete', async (message) => {
     const module = logModules.find(mod => mod.name === 'messageDelete');
-    if (module) {
-        await module.execute(client, message, logChannelId);
+    if (module && logWebhook) {
+        await module.execute(client, message, logWebhook.url);
     }
 });
 
 client.on('messageUpdate', async (oldMessage, newMessage) => {
     const module = logModules.find(mod => mod.name === 'messageUpdate');
-    if (module) {
-        await module.execute(client, oldMessage, newMessage, logChannelId);
+    if (module && logWebhook) {
+        await module.execute(client, oldMessage, newMessage, logWebhook.url);
     }
 });
 
@@ -63,11 +65,9 @@ const rest = new REST({ version: '10' }).setToken(token);
     try {
         console.log('アプリケーションコマンドの再読み込みを開始しました');
 
-        // 既存のコマンドを取得
         for (const guildId of guildIds) {
             const existingCommands = await rest.get(Routes.applicationGuildCommands(clientId, guildId.trim()));
 
-            // 既存のコマンドを削除する
             for (const command of existingCommands) {
                 const commandExists = commands.some(cmd => cmd.data.name === command.name);
                 if (!commandExists) {
@@ -84,7 +84,6 @@ const rest = new REST({ version: '10' }).setToken(token);
                 }
             }
 
-            // 新しいコマンドを登録
             await rest.put(
                 Routes.applicationGuildCommands(clientId, guildId.trim()),
                 { body: commands.map(command => command.data.toJSON()) }
@@ -100,11 +99,31 @@ const rest = new REST({ version: '10' }).setToken(token);
     }
 })();
 
-client.once('ready', () => {
+client.once('ready', async() => {
     console.log(`${client.user.tag} がログインしました`);
+
+    try {
+        const logChannel = await client.channels.fetch(logChannelId);
+        if (!logChannel?.isTextBased()) {
+            console.error('ログチャンネルが見つからない、またはテキストチャンネルではありません。');
+            return;
+        }
+
+        const webhooks = await logChannel.fetchWebhooks();
+        logWebhook = webhooks.find(wh => wh.name === 'タムタムん家_ログシステム');
+
+        if (!logWebhook) {
+            logWebhook = await logChannel.createWebhook({
+                name: 'タムタムん家_ログシステム',
+                avatar: client.user.displayAvatarURL(),
+            });
+            console.log('webhookの作成に成功しました');
+        }
+    } catch (error) {
+        console.error('webhookの取得または作成に失敗しました', error);
+    }
 });
 
-// エラーをWebhookに送信する関数
 const sendErrorToWebhook = async (error) => {
     const embed = new EmbedBuilder()
         .setTitle('エラーが発生しました')
@@ -123,7 +142,6 @@ const sendErrorToWebhook = async (error) => {
     }
 };
 
-// コマンド実行ハンドラー
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 

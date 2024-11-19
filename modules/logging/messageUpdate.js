@@ -1,24 +1,30 @@
-const { EmbedBuilder } = require('discord.js');
+const fetch = require('node-fetch');
 
 module.exports = {
     name: 'messageUpdate',
-    async execute(client, oldMessage, newMessage, logChannelId) {
+    async execute(client, oldMessage, newMessage, webhookUrl) {
         if (oldMessage.author?.bot || oldMessage.content === newMessage.content) return;
 
-        const logChannel = await client.channels.fetch(logChannelId).catch(console.error);
-        if (!logChannel?.isTextBased()) return;
-
-        const embed = new EmbedBuilder()
-            .setTitle('メッセージが編集されました')
-            .setColor(0xFFFF00)
-            .addFields(
+        const embed = {
+            title: 'メッセージが編集されました',
+            color: 0xFFFF00,
+            fields: [
                 { name: '送信者', value: `${oldMessage.author.tag}`, inline: true },
                 { name: 'チャンネル', value: `<#${oldMessage.channel.id}>`, inline: true },
                 { name: '元の内容', value: oldMessage.content || '内容なし' },
                 { name: '編集後の内容', value: newMessage.content || '内容なし' }
-            )
-            .setTimestamp();
+            ],
+            timestamp: new Date().toISOString()
+        };
 
-        await logChannel.send({ embeds: [embed] }).catch(console.error);
+        try {
+            await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ embeds: [embed] }),
+            });
+        } catch (error) {
+            console.error('Webhookへの送信に失敗しました:', error);
+        }
     },
 };

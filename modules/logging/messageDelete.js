@@ -1,23 +1,29 @@
-const { EmbedBuilder } = require('discord.js');
+const fetch = require('node-fetch');
 
 module.exports = {
     name: 'messageDelete',
-    async execute(client, message, logChannelId) {
+    async execute(client, message, webhookUrl) {
         if (message.author?.bot) return;
 
-        const logChannel = await client.channels.fetch(logChannelId).catch(console.error);
-        if (!logChannel?.isTextBased()) return;
-
-        const embed = new EmbedBuilder()
-            .setTitle('メッセージが削除されました')
-            .setColor(0xFF0000)
-            .addFields(
+        const embed = {
+            title: 'メッセージが削除されました',
+            color: 0xFF0000,
+            fields: [
                 { name: '送信者', value: `${message.author.tag}`, inline: true },
                 { name: 'チャンネル', value: `<#${message.channel.id}>`, inline: true },
                 { name: '内容', value: message.content || '内容なし' }
-            )
-            .setTimestamp();
+            ],
+            timestamp: new Date().toISOString()
+        };
 
-        await logChannel.send({ embeds: [embed] }).catch(console.error);
+        try {
+            await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ embeds: [embed] }),
+            });
+        } catch (error) {
+            console.error('Webhookへの送信に失敗しました:', error);
+        }
     },
 };
