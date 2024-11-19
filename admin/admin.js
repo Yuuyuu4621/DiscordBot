@@ -9,18 +9,12 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('stop')
-                .setDescription('botを停止します'))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('restart')
-                .setDescription('botを再起動します')),
+                .setDescription('botを停止します')),
     
     async execute(interaction) {
         const subcommand = interaction.options.getSubcommand();
         if (subcommand === 'stop') {
             return stop.execute(interaction);
-        } else if (subcommand === 'restart') {
-            return restart.execute(interaction);
         }
     },
 };
