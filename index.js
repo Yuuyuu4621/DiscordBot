@@ -9,11 +9,12 @@ const clientId = process.env.CLIENT_ID;
 const guildIds = process.env.GUILD_ID.split(',');
 const webhookUrl = process.env.WEBHOOK_URL;
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const logChannelId = '1284147765756039179';
+
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
 const commands = [];
 
-// コマンドファイルを読み込む
 const commandFiles = fs.readdirSync(path.join(__dirname, 'commands')).filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
     const command = require(`./commands/${file}`);
@@ -23,6 +24,32 @@ for (const file of commandFiles) {
         console.error(`コマンド ${file} に問題があります: dataが正しく設定されていません。`);
     }
 }
+
+const logModules = [];
+
+const logFiles = fs.readdirSync(path.join(__dirname, 'modules/logging')).filter(file => file.endsWith('.js'));
+for (const file of logFiles) {
+    const logModule = require(`./modules/logging/${file}`);
+    if (logModule.name && logModule.execute) {
+        logModules.push(logModule);
+    } else {
+        console.error(`ログモジュール ${file} に問題があります。`);
+    }
+}
+
+client.on('messageDelete', async (message) => {
+    const module = logModules.find(mod => mod.name === 'messageDelete');
+    if (module) {
+        await module.execute(client, message, logChannelId);
+    }
+});
+
+client.on('messageUpdate', async (oldMessage, newMessage) => {
+    const module = logModules.find(mod => mod.name === 'messageUpdate');
+    if (module) {
+        await module.execute(client, oldMessage, newMessage, logChannelId);
+    }
+});
 
 const adminCommand = require('./admin/admin');
 const roleCommand = require('./modules/function/role/role');
