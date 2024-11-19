@@ -8,8 +8,7 @@ const token = process.env.DISCORD_TOKEN;
 const clientId = process.env.CLIENT_ID;
 const guildIds = process.env.GUILD_ID.split(',');
 const webhookUrl = process.env.WEBHOOK_URL;
-
-const logChannelId = '1284147765756039179';
+const logChannelId = process.env.LOGCHANNEL_ID;
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
