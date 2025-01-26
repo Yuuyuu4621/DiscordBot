@@ -110,8 +110,8 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 return;
             }
 
-            await notifyChannel.send(`<@${targetUserId}> さんが VC に参加しました！`);
-            console.log(`ユーザー ${targetUserId} の VC 参加を通知しました。`);
+            await notifyChannel.send(`ゆうゆう さんが VC に参加しました！`);
+            console.log(`ユーザー ゆうゆう の VC 参加を通知しました。`);
         } catch (error) {
             console.error('VC 参加通知中にエラーが発生しました:', error);
         }
