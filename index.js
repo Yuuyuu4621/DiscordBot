@@ -10,7 +10,7 @@ const guildIds = process.env.GUILD_ID.split(',');
 const webhookUrl = process.env.WEBHOOK_URL;
 const logChannelId = process.env.LOGCHANNEL_ID;
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
 const commands = [];
 
@@ -97,6 +97,27 @@ const rest = new REST({ version: '10' }).setToken(token);
         await sendErrorToWebhook(error);
     }
 })();
+
+client.on('voiceStateUpdate', async (oldState, newState) => {
+    const targetUserId = '892335593118392341';
+    const notifyChannelId = '1307312291103903775';
+
+    if (newState.member?.id === targetUserId && !oldState.channelId && newState.channelId) {
+        try {
+            const notifyChannel = await client.channels.fetch(notifyChannelId);
+            if (!notifyChannel?.isTextBased()) {
+                console.error('通知先チャンネルがテキストチャンネルではありません。');
+                return;
+            }
+
+            await notifyChannel.send(`<@${targetUserId}> さんが VC に参加しました！`);
+            console.log(`ユーザー ${targetUserId} の VC 参加を通知しました。`);
+        } catch (error) {
+            console.error('VC 参加通知中にエラーが発生しました:', error);
+        }
+    }
+});
+
 
 client.once('ready', async() => {
     console.log(`${client.user.tag} がログインしました`);
