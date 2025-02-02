@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, REST, Routes, EmbedBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, REST, Routes, EmbedBuilder, Partials } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
@@ -10,7 +10,7 @@ const guildIds = process.env.GUILD_ID.split(',');
 const webhookUrl = process.env.WEBHOOK_URL;
 const logChannelId = process.env.LOGCHANNEL_ID;
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent], partials: [Partials.Message, Partials.Channel, Partials.GuildMember] });
 
 const commands = [];
 
@@ -52,6 +52,23 @@ client.on('messageUpdate', async (oldMessage, newMessage) => {
     }
 });
 
+client.on('messageCreate', (message) => {
+    if (message.author.bot) return;
+
+    if (message.content === 'おはよう') {
+        message.reply({
+            content: `${message.author.username} さん、おはよう`,
+            allowedMentions: { repliedUser: false }
+        });
+    }
+
+    if (message.content === 'こんばんは') {
+        message.reply({
+            content: `${message.author.username} さん、こんばんは`,
+            allowedMentions: { repliedUser: false }
+        });
+    }
+});
 const adminCommand = require('./admin/admin');
 const roleCommand = require('./modules/function/role/role');
 const kickCommand = require('./modules/function/kick');
@@ -130,11 +147,11 @@ client.once('ready', async() => {
         }
 
         const webhooks = await logChannel.fetchWebhooks();
-        logWebhook = webhooks.find(wh => wh.name === 'タムタムん家_ログシステム');
+        logWebhook = webhooks.find(wh => wh.name === 'Yuuyuu4621 General_Manager LogSystem');
 
         if (!logWebhook) {
             logWebhook = await logChannel.createWebhook({
-                name: 'タムタムん家_ログシステム',
+                name: 'Yuuyuu4621 General_Manager LogSystem',
                 avatar: client.user.displayAvatarURL(),
             });
             console.log('webhookの作成に成功しました');
@@ -175,6 +192,59 @@ client.on('interactionCreate', async interaction => {
             console.error('コマンド実行中にエラーが発生しました:', error);
             await sendErrorToWebhook(error);
             await interaction.reply({ content: 'コマンド実行中にエラーが発生しました。', ephemeral: true });
+        }
+    }
+});
+
+const targetUserId = process.env.REACTION_ID;
+const reactionEmoji = '🔪';
+
+client.on('messageCreate', async (message) => {
+    if (message.author.bot) return;
+
+    if (message.author.id === targetUserId) {
+        try {
+            await message.react(reactionEmoji);
+            console.log(`リアクションを付けました: ${message.content}`);
+        } catch (error) {
+            console.error('リアクションの追加に失敗しました:', error);
+        }
+    }
+});
+
+client.on('messageCreate', async (message) => {
+    if (message.author.bot) return;
+
+    if (message.content.includes('いそかぜ')) {
+        try {
+            await message.react(reactionEmoji);
+            console.log(`リアクションを付けました: ${message.content}`);
+        } catch (error) {
+            console.error('リアクションの追加に失敗しました:', error);
+        }
+    }
+});
+
+const messageLinkRegex = /https:\/\/discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)/;
+
+client.on('messageCreate', async (message) => {
+    if (message.author.bot) return;
+
+    const match = message.content.match(messageLinkRegex);
+    if (match) {
+        const [_, guildId, channelId, messageId] = match;
+
+        try {
+            const guild = await client.guilds.fetch(guildId);
+            const channel = await guild.channels.fetch(channelId);
+            const targetMessage = await channel.messages.fetch(messageId);
+
+            await message.reply({
+                content: `**${targetMessage.author.username} のメッセージ:**\n${targetMessage.content}`, allowedMentions: { repliedUser: false }
+            });
+        } catch (error) {
+            console.error('メッセージの取得に失敗しました:', error);
+            await message.reply('メッセージを取得できませんでした。権限が不足している可能性があります。');
         }
     }
 });

@@ -26,7 +26,6 @@ module.exports = {
             return interaction.reply({ content: 'そのユーザーは存在しません。', ephemeral: true });
         }
 
-        // キック実行
         await targetUser.kick(`${reason} - 実行: ${executor}`);
         await interaction.reply(`${targetUser.user.tag} はキックされました。理由: ${reason}`);
     },
