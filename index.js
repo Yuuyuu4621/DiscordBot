@@ -71,7 +71,7 @@ client.on('messageCreate', (message) => {
 });
 const adminCommand = require('./admin/admin');
 const roleCommand = require('./modules/function/role/role');
-const kickCommand = require('./modules/function/kick');
+const kickCommand = require('./modules/function/punishment/kick');
 const channelCommand = require('./modules/function/channel/channel');
 commands.push(roleCommand, kickCommand, adminCommand, channelCommand);
 
